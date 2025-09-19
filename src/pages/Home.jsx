@@ -7,21 +7,29 @@ import PokeballSelector from "../components/PokeballSelector";
 import CameraFlyIn from "../components/CameraFlyIn";
 import CameraIntro from "../components/CameraIntro";
 import textBg from "../assets/images/text.png";
-import { FaArrowAltCircleDown, FaArrowDown, FaCaretDown } from "react-icons/fa";
+import { FaCaretDown } from "react-icons/fa";
 import Temple from "../models/Temple";
 
 const Home = () => {
   const [flyTarget, setFlyTarget] = useState(null);
   const [fadeOpacity, setFadeOpacity] = useState(0);
-  const [showInstructions, setShowInstructions] = useState(true);
+  // Change showInstructions boolean to instructionIndex
+  const [instructionIndex, setInstructionIndex] = useState(0);
   const [showDestination, setShowDestination] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [introComplete, setIntroComplete] = useState(false);
   const navigate = useNavigate();
 
+  const instructions = [
+    "Welcome to My Portfolio! Click to continue.",
+    "This is a 3D interactive portfolio WIP inspired by Pokemon.",
+    "Use Arrow Keys or Drag to rotate pokeballs. Click the front pokeball to navigate to their page.",
+  ];
+
   const adjustPokeballForScreenSize = () => {
-    const scale = window.innerWidth > 768 ? [0.01 , 0.01, 0.01] : [.01, .01, 0.01];
-    const position = [0, -.5, -3]
+    const scale =
+      window.innerWidth > 768 ? [0.01, 0.01, 0.01] : [0.01, 0.01, 0.01];
+    const position = [0, -0.5, -3];
     const rotation = [0.1, 4.7, 0];
     return [scale, position, rotation];
   };
@@ -71,7 +79,7 @@ const Home = () => {
           position: [0, 0, 1],
           near: 0.001,
           far: 20000,
-          rotation: [-.4, 0, 0],
+          rotation: [-0.4, 0, 0],
         }}
       >
         <Suspense fallback={<Loader />}>
@@ -84,21 +92,23 @@ const Home = () => {
           />
 
           <Sky />
-          <Temple position={[0, -8, 0]} rotation={[0, 0, Math.PI / 2]} scale={[100, 100, 100]} />
+          <Temple
+            position={[0, -8, 0]}
+            rotation={[0, 0, Math.PI / 2]}
+            scale={[100, 100, 100]}
+          />
 
-          {/* Initial camera zoom-in animation */}
           {!introComplete && (
             <CameraIntro
               startPosition={[0, 130, 200]}
-              endPosition={[0, -.3, -2]}
-              startRotation={[-.6, 0, 0]}
-              endRotation={[-.4, 0, 0]}
+              endPosition={[0, -0.3, -2]}
+              startRotation={[-0.6, 0, 0]}
+              endRotation={[-0.4, 0, 0]}
               duration={3}
               onComplete={() => setIntroComplete(true)}
             />
           )}
 
-          {/* Camera fly-in for navigation */}
           {flyTarget && (
             <CameraFlyIn
               target={flyTarget}
@@ -119,7 +129,6 @@ const Home = () => {
         </Suspense>
       </Canvas>
 
-      {/* Fade overlay */}
       <div
         style={{
           position: "absolute",
@@ -133,10 +142,17 @@ const Home = () => {
         }}
       />
 
-      {/* Instructions - only show after intro is complete */}
-      {showInstructions && introComplete && (
+      {/* Show instructions only if instructionIndex is not null */}
+      {instructionIndex !== null && introComplete && (
         <div
-          className="opacity-70 font-pokemon absolute top-20 left-1/2 transform -translate-x-1/2 w-[700px] h-32 px-4 py-2 rounded-lg flex items-center justify-center"
+          onClick={() => {
+            if (instructionIndex + 1 >= instructions.length) {
+              setInstructionIndex(null); // No more instructions
+            } else {
+              setInstructionIndex(instructionIndex + 1);
+            }
+          }}
+          className="opacity-70 font-pokemon absolute top-20 left-1/2 transform -translate-x-1/2 w-[700px] h-32 px-4 py-2 rounded-lg flex items-center justify-center cursor-pointer"
           style={{
             backgroundImage: `url(${textBg})`,
             backgroundColor: "white",
@@ -147,12 +163,11 @@ const Home = () => {
         >
           <div className="relative w-full h-full flex items-center">
             <div className="text-black text-sm break-words flex-1 px-4">
-              Use Arrow Keys or Drag to rotate pokeballs. Click the front
-              pokeball to navigate to their page.
+              {instructions[instructionIndex]}
             </div>
             <button
-              onClick={() => setShowInstructions(false)}
               className="absolute bottom-2 right-2 text-black text-xl animate-bounce"
+              aria-label="Next instruction"
             >
               <FaCaretDown />
             </button>
@@ -160,7 +175,6 @@ const Home = () => {
         </div>
       )}
 
-      {/* Destination label - only show after intro is complete */}
       {showDestination && introComplete && (
         <div className="absolute top-80 left-1/2 transform -translate-x-1/2 text-lg font-bold text-white drop-shadow-[0_0_5px_black]">
           {destinations[selectedIndex]}
